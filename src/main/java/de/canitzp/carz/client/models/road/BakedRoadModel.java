@@ -52,18 +52,21 @@ public class BakedRoadModel implements IBakedModel {
     public List<BakedQuad> getQuads(@Nullable IBlockState state, @Nullable EnumFacing side, long rand) {
         if (state instanceof IExtendedBlockState&&side==null) {
             PixelMesh mesh = ((IExtendedBlockState) state).getValue(MODEL);
+            if (mesh!=null&&mesh.getPixels()==null)
+                mesh = null;
+            final PixelMesh meshFinal = mesh;
             EnumFacing facing = ((IExtendedBlockState) state).getValue(FACING_MESH);
             int additional = -1;
             if (state.getBlock()== Registry.blockRoadSlope) {
                 additional = state.getValue(FACING).getIndex();
                 additional |= state.getValue(SLOPE_NUMBER)<<3;
             }
-            RoadCacheKey key = new RoadCacheKey(mesh==null?null:mesh.getId(),
+            RoadCacheKey key = new RoadCacheKey(meshFinal==null?null:meshFinal.getId(),
                     facing, baseLoc, additional);
             try {
                 return MODEL_CACHE.get(key, ()->{
                     List<BakedQuad> ret = new ArrayList<>();
-                    if (mesh!=null) {
+                    if (meshFinal!=null) {
                         Matrix4f transform = new Matrix4f();
                         Vector3f tmp = new Vector3f();
                         if (state.getBlock() == Registry.blockRoadSlope) {
@@ -104,7 +107,7 @@ public class BakedRoadModel implements IBakedModel {
                         transform.scale(tmp);
                         tmp.set(-.5F, 0, -.5F);
                         transform.translate(tmp);
-                        Pixel[][] pixels = mesh.getPixels();
+                        Pixel[][] pixels = meshFinal.getPixels();
                         Vector4f v1 = new Vector4f(0, 0, 0, 1);
                         Vector4f v2 = new Vector4f(0, 0, 0, 1);
                         Vector4f v3 = new Vector4f(0, 0, 0, 1);
